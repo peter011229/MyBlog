@@ -11,14 +11,23 @@ const Home: React.FC = () => {
     const [keyword, setKeyword] = useState('');
     const [categoryId, setCategoryId] = useState<number | undefined>(undefined);
     const [loading, setLoading] = useState(false);
+    const [categories, setCategories] = useState<{ id: number | undefined, name: string }[]>([]);
 
-    // 模拟全部分类数据 (实际应从后端获取)
-    const categories = [
-        { id: undefined, name: '全部' },
-        { id: 1, name: '技术' },
-        { id: 2, name: '生活' },
-        { id: 3, name: '感悟' }
-    ];
+    // 获取分类数据
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const response = await api.get('/posts/categories/all');
+                setCategories([
+                    { id: undefined, name: '全部' },
+                    ...response.data.data.categories
+                ]);
+            } catch (err) {
+                console.error('获取分类失败:', err);
+            }
+        };
+        fetchCategories();
+    }, []);
 
     const fetchPosts = async () => {
         setLoading(true);

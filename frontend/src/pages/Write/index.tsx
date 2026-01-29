@@ -21,6 +21,7 @@ const Write: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [categories, setCategories] = useState<{ id: number, name: string }[]>([]);
 
     // 辅助函数：处理图片上传
     const handleImageUpload = async (file: File, type: 'cover' | 'content') => {
@@ -46,12 +47,18 @@ const Write: React.FC = () => {
         }
     };
 
-    // 模拟分类数据
-    const categories = [
-        { id: 1, name: '技术' },
-        { id: 2, name: '生活' },
-        { id: 3, name: '感悟' }
-    ];
+    // 获取全部分类数据
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const response = await api.get('/posts/categories/all');
+                setCategories(response.data.data.categories);
+            } catch (err) {
+                console.error('获取分类失败:', err);
+            }
+        };
+        fetchCategories();
+    }, []);
 
     useEffect(() => {
         if (editId) {

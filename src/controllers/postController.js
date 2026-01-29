@@ -1,4 +1,5 @@
 const Post = require('../models/postModel');
+const Category = require('../models/categoryModel');
 
 // 发布文章
 exports.createPost = async (req, res) => {
@@ -9,13 +10,23 @@ exports.createPost = async (req, res) => {
             return res.status(400).json({ message: '标题和内容不能为空' });
         }
 
+        // 自动解析分类 ID：如果是字符串（名称），则查表或创建；如果是数字 ID，则直接使用
+        let finalCategoryId = null;
+        if (category_id) {
+            if (typeof category_id === 'string' && isNaN(Number(category_id))) {
+                finalCategoryId = await Category.findOrCreateByName(category_id);
+            } else {
+                finalCategoryId = Number(category_id);
+            }
+        }
+
         const postId = await Post.create({
             title,
             content,
-            category_id,
+            category_id: finalCategoryId,
             tags,
             cover,
-            author_id: req.user.id // 从 token 鉴权中间件获取
+            author_id: req.user.id
         });
 
         res.status(201).json({
@@ -96,8 +107,18 @@ exports.updatePost = async (req, res) => {
             return res.status(403).json({ message: '您无权编辑此文章' });
         }
 
+        // 自动解析分类 ID
+        let finalCategoryId = null;
+        if (category_id) {
+            if (typeof category_id === 'string' && isNaN(Number(category_id))) {
+                finalCategoryId = await Category.findOrCreateByName(category_id);
+            } else {
+                finalCategoryId = Number(category_id);
+            }
+        }
+
         // 2. 执行更新
-        await Post.update(id, { title, content, category_id, tags, cover });
+        await Post.update(id, { title, content, category_id: finalCategoryId, tags, cover });
 
         res.json({
             status: 'success',
@@ -133,6 +154,19 @@ exports.deletePost = async (req, res) => {
         });
     } catch (err) {
         console.error('删除文章错误:', err);
+        res.status(500).json({ message: '服务器错误' });
+    }
+};
+// 获取所有分类列表
+exports.getCategories = async (req, res) => {
+    try {
+        const categories = await Category.findAll();
+        res.json({
+            status: 'success',
+            data: { categories }
+        });
+    } catch (err) {
+        console.error('获取分类列表错误:', err);
         res.status(500).json({ message: '服务器错误' });
     }
 };

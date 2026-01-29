@@ -6,6 +6,7 @@ const authMiddleware = require('../middleware/authMiddleware');
 // 公开接口：获取列表和详情
 router.get('/', postController.getAllPosts);
 router.get('/:id', postController.getPostById);
+router.get('/categories/all', postController.getCategories); // 新增：获取全部分类
 
 // 受保护接口：必须登录才能操作
 router.post('/', authMiddleware, postController.createPost);

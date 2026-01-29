@@ -1,0 +1,23 @@
+# Node modules
+node_modules/
+frontend/node_modules/
+
+# Environment variables
+.env
+
+# Build outputs
+dist/
+frontend/dist/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Uploaded images (Local only)
+public/uploads/*
+!public/uploads/.gitkeep
+
+# IDE files
+.vscode/
+.idea/
+.gemini/

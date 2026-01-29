@@ -1,8 +1,3 @@
--- 创建数据库 (如果不存在)
-CREATE DATABASE IF NOT EXISTS my_blog_db CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-
-USE my_blog_db;
-
 -- 1. 用户表
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',

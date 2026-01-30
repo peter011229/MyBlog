@@ -22,6 +22,8 @@ const Write: React.FC = () => {
     const [fetching, setFetching] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [categories, setCategories] = useState<{ id: number, name: string }[]>([]);
+    const [isNewCategory, setIsNewCategory] = useState(false);
+    const [newCategoryName, setNewCategoryName] = useState('');
 
     // 辅助函数：处理图片上传
     const handleImageUpload = async (file: File, type: 'cover' | 'content') => {
@@ -52,7 +54,12 @@ const Write: React.FC = () => {
         const fetchCategories = async () => {
             try {
                 const response = await api.get('/posts/categories/all');
-                setCategories(response.data.data.categories);
+                const cats = response.data.data.categories;
+                setCategories(cats);
+                // 如果库里没分类，默认开启“新建模式”
+                if (cats.length === 0) {
+                    setIsNewCategory(true);
+                }
             } catch (err) {
                 console.error('获取分类失败:', err);
             }
@@ -97,7 +104,7 @@ const Write: React.FC = () => {
         const postData = {
             title,
             content,
-            category_id: categoryId,
+            category_id: isNewCategory ? newCategoryName : categoryId,
             tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag),
             cover
         };
@@ -140,15 +147,37 @@ const Write: React.FC = () => {
                         required
                         style={{ flex: 1, padding: '12px', fontSize: '1.2rem', borderRadius: '4px', border: '1px solid #ddd' }}
                     />
-                    <select
-                        value={categoryId}
-                        onChange={(e) => setCategoryId(Number(e.target.value))}
-                        style={{ padding: '0 15px', borderRadius: '4px', border: '1px solid #ddd' }}
-                    >
-                        {categories.map(cat => (
-                            <option key={cat.id} value={cat.id}>{cat.name}</option>
-                        ))}
-                    </select>
+                    {isNewCategory ? (
+                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                            <input
+                                type="text"
+                                placeholder="输入新分类名称"
+                                value={newCategoryName}
+                                onChange={(e) => setNewCategoryName(e.target.value)}
+                                style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+                            />
+                            {categories.length > 0 && (
+                                <button type="button" onClick={() => setIsNewCategory(false)} style={{ fontSize: '0.8rem', background: 'none', border: 'none', color: '#666', cursor: 'pointer' }}>取消</button>
+                            )}
+                        </div>
+                    ) : (
+                        <select
+                            value={categoryId}
+                            onChange={(e) => {
+                                if (e.target.value === 'new') {
+                                    setIsNewCategory(true);
+                                } else {
+                                    setCategoryId(Number(e.target.value));
+                                }
+                            }}
+                            style={{ padding: '0 15px', borderRadius: '4px', border: '1px solid #ddd' }}
+                        >
+                            {categories.map(cat => (
+                                <option key={cat.id} value={cat.id}>{cat.name}</option>
+                            ))}
+                            <option value="new">+ 新建分类...</option>
+                        </select>
+                    )}
                     <button
                         type="submit"
                         disabled={loading || uploading}

@@ -12,13 +12,27 @@ exports.createPost = async (req, res) => {
 
         // 自动解析分类 ID：如果是字符串（名称），则查表或创建；如果是数字 ID，则直接使用
         let finalCategoryId = null;
+        console.log('--- 分类解析开始 ---');
+        console.log('接收到的 category_id:', category_id, '类型:', typeof category_id);
+
         if (category_id) {
             if (typeof category_id === 'string' && isNaN(Number(category_id))) {
-                finalCategoryId = await Category.findOrCreateByName(category_id);
+                console.log('检测到分类名称，正在查找/创建:', category_id);
+                const resultId = await Category.findOrCreateByName(category_id);
+                finalCategoryId = parseInt(resultId, 10);
+                console.log('解析分类 ID 结果 (名称):', finalCategoryId);
             } else {
-                finalCategoryId = Number(category_id);
+                finalCategoryId = parseInt(category_id, 10);
+                console.log('直接转换 ID 结果 (数字):', finalCategoryId);
             }
         }
+
+        // 兜底检查：如果解析出的不是有效数字，则强制设为 null (防止外键报错)
+        if (isNaN(finalCategoryId)) {
+            console.warn('⚠️ 警告: 解析出的分类 ID 无效，将设为 null');
+            finalCategoryId = null;
+        }
+        console.log('最终插入数据库的 finalCategoryId:', finalCategoryId);
 
         const postId = await Post.create({
             title,
@@ -111,11 +125,13 @@ exports.updatePost = async (req, res) => {
         let finalCategoryId = null;
         if (category_id) {
             if (typeof category_id === 'string' && isNaN(Number(category_id))) {
-                finalCategoryId = await Category.findOrCreateByName(category_id);
+                const resultId = await Category.findOrCreateByName(category_id);
+                finalCategoryId = parseInt(resultId, 10);
             } else {
-                finalCategoryId = Number(category_id);
+                finalCategoryId = parseInt(category_id, 10);
             }
         }
+        if (isNaN(finalCategoryId)) finalCategoryId = null;
 
         // 2. 执行更新
         await Post.update(id, { title, content, category_id: finalCategoryId, tags, cover });
